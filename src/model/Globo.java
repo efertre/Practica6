@@ -76,8 +76,7 @@ public class Globo extends Thread {
                 angulo += cambio;
 
                 // Limitar el ángulo a ±45 grados
-                angulo = Math.max(ANGULO_MIN, Math.min(ANGULO_MAX, angulo));
-            }
+                angulo = Math.sin(System.currentTimeMillis() / 1000.0) * ANGULO_MAX;            }
 
             try {
                 Thread.sleep(1000 / 60); // 60 FPS
@@ -87,6 +86,30 @@ public class Globo extends Thread {
         }
     }
 
+    
+    public void reiniciar() {
+        this.y = 500; // Posición inicial
+        this.explotado = false;
+        this.tiempo = 0;
+        this.angulo = 0; // Restablecer balanceo
+        this.velocidad = (int) (Math.random() * 1.5 + 1.5); // Nueva velocidad aleatoria
+
+        // Cambiar sprite a su imagen original
+        try {
+            String ruta = "";
+            switch (id) {
+                case 1: ruta = "assets/corazon_rosa.png"; break;
+                case 2: ruta = "assets/corazon_azul.png"; break;
+                case 3: ruta = "assets/corazon_naranja.png"; break;
+                case 4: ruta = "assets/corazon_verde.png"; break;
+            }
+            sprite = ImageIO.read(new File(ruta));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    
     public void explotar() {
         explotado = true;
         tiempo = (int) (System.currentTimeMillis() - tiempoInicio);

@@ -20,104 +20,139 @@ public class FrmPrincipal extends JFrame {
     private long lastFrame = System.nanoTime();
     private int fps;
 
+ // Variable para controlar si se muestra el botón de reinicio
+    private JButton btnReiniciar;
+
     public FrmPrincipal() {
         super("Carrera de Globos");
         setSize(695, 760);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        getContentPane().setLayout(null);
-        setLocationRelativeTo(null);
-        setResizable(false);
+        setLayout(new BorderLayout()); // Usar BorderLayout para organizar componentes
 
-        // Inicializar globos
+        // Crear panel personalizado
+        PanelDibujo panelDibujo = new PanelDibujo(this);
+        add(panelDibujo, BorderLayout.CENTER); // Agregar el panel al centro
+
+        // Botón "Iniciar Carrera"
+        btnIniciar = new JButton("Iniciar Carrera");
+        btnIniciar.setBounds(300, 20, 150, 30);
+        btnIniciar.addActionListener(e -> {
+            carreraIniciada = true;
+            btnIniciar.setEnabled(false); // Deshabilitar después de iniciar
+        });
+        getContentPane().add(btnIniciar);
+
+        // Botón "Reiniciar Carrera"
+        btnReiniciar = new JButton("Reiniciar Carrera");
+        btnReiniciar.setBounds(300, 60, 150, 30);
+        btnReiniciar.addActionListener(e -> reiniciarCarrera());
+        btnReiniciar.setVisible(false); // Oculto al inicio
+        getContentPane().add(btnReiniciar);
+
+        // Inicializar globos y techo
         globos = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             Globo globo = new Globo(50 + i * 150, 500, this);
             globos.add(globo);
         }
-
-        // Inicializar techo
         techo = new Techo(0, 0);
-
-        // Botón para iniciar la carrera
-        btnIniciar = new JButton("Iniciar Carrera");
-        btnIniciar.setBounds(300, 20, 150, 30);
-        btnIniciar.addActionListener(e -> {
-            carreraIniciada = true;
-            btnIniciar.setEnabled(false);
-            podioMostrado = false; // Reinicia la bandera cuando inicia la carrera
-        });
-        getContentPane().add(btnIniciar);
-
-        // Listener para simular el viento al hacer clic
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                for (Globo globo : globos) {
-                    if (globo.getBounds().contains(e.getPoint())) {
-                        globo.afectarConViento();
-                    }
-                }
-            }
-        });
 
         setVisible(true);
 
-        // Iniciar el ciclo de animación
+        // Ciclo de animación
         new Thread(() -> {
             while (true) {
-                repaint();
+                repaint(); // Actualizar la pantalla
                 try {
                     Thread.sleep(1000 / 60); // Control de FPS
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
                 }
             }
         }).start();
+    }
+
+    // Métodos adicionales...
+    public ArrayList<Globo> getGlobos() {
+        return globos;
+    }
+
+    public Techo getTecho() {
+        return techo;
+    }
+
+    // Método para reiniciar la carrera
+    private void reiniciarCarrera() {
+        // Restablecer estado de los globos
+        for (Globo globo : globos) {
+            globo.reiniciar();
+        }
+
+        // Reiniciar variables de estado
+        carreraIniciada = false;
+        podioMostrado = false;
+
+        // Mostrar botones correspondientes
+        btnIniciar.setEnabled(true);
+        btnReiniciar.setVisible(false);
+
+        // Limpiar podio
+        JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
     }
 
  // Nueva variable de estado para evitar que se muestre el podio varias veces
     private boolean podioMostrado = false;
 
     @Override
+    public void addNotify() {
+        super.addNotify();
+        // Crear una estrategia de búfer con 2 buffers
+        createBufferStrategy(2);
+    }
+
+    @Override
     public void paint(Graphics g) {
-        Image img = createImage(getWidth(), getHeight());
-        Graphics offscreen = img.getGraphics();
+        // Obtener la estrategia de búfer
+        Graphics bufferGraphics = getBufferStrategy().getDrawGraphics();
 
-        // Fondo
-        offscreen.setColor(Color.white);
-        offscreen.fillRect(0, 0, getWidth(), getHeight());
+        try {
+            // Fondo
+            bufferGraphics.setColor(Color.white);
+            bufferGraphics.fillRect(0, 0, getWidth(), getHeight());
 
-        // Dibujar techo
-        techo.dibujar(offscreen);
+            // Dibujar techo
+            techo.dibujar(bufferGraphics);
 
-        // Dibujar globos
-        for (Globo globo : globos) {
-            globo.dibujar(offscreen);
-        }
-
-        // Mostrar FPS
-        long currentFrame = System.nanoTime();
-        fps = (int) (1e9 / (currentFrame - lastFrame));
-        lastFrame = currentFrame;
-        offscreen.setColor(Color.BLACK);
-        offscreen.drawString("FPS: " + fps, 10, 50);
-
-        // Control de colisiones y fin de carrera
-        if (carreraIniciada) {
+            // Dibujar globos
             for (Globo globo : globos) {
-                if (globo.getY() <= techo.getY() + 10) {
-                    globo.explotar();
+                globo.dibujar(bufferGraphics);
+            }
+
+            // Mostrar FPS
+            long currentFrame = System.nanoTime();
+            fps = (int) (1e9 / (currentFrame - lastFrame));
+            lastFrame = currentFrame;
+            bufferGraphics.setColor(Color.BLACK);
+            bufferGraphics.drawString("FPS: " + fps, 10, 50);
+
+            // Control de colisiones y fin de carrera
+            if (carreraIniciada) {
+                for (Globo globo : globos) {
+                    if (globo.getY() <= techo.getY() + 10) {
+                        globo.explotar();
+                    }
+                }
+                // Verificar si todos explotaron fuera de paint()
+                if (todosExplotados() && !podioMostrado) {
+                    podioMostrado = true;
+                    mostrarPodioEnHilo();
                 }
             }
-
-            // Verificar si todos explotaron fuera de paint()
-            if (todosExplotados() && !podioMostrado) {
-                podioMostrado = true;
-                mostrarPodioEnHilo();
-            }
+        } finally {
+            // Liberar recursos y mostrar el buffer
+            bufferGraphics.dispose();
+            getBufferStrategy().show();
         }
-
-        g.drawImage(img, 0, 0, this);
     }
 
     // Método para verificar si todos los globos explotaron
