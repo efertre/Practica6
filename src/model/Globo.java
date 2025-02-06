@@ -6,6 +6,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import view.FrmPrincipal;
 
@@ -26,7 +29,7 @@ public class Globo extends Thread {
         this.id = ++contador;
         this.x = x;
         this.y = y;
-        this.velocidad = (int) (Math.random() * 1.5 + 1.5);
+        
         this.explotado = false;
         this.tiempoInicio = System.currentTimeMillis();
         this.principal = principal;
@@ -87,28 +90,11 @@ public class Globo extends Thread {
     }
 
     
-    public void reiniciar() {
-        this.y = 500; // Posición inicial
-        this.explotado = false;
-        this.tiempo = 0;
-        this.angulo = 0; // Restablecer balanceo
-        this.velocidad = (int) (Math.random() * 1.5 + 1.5); // Nueva velocidad aleatoria
-
-        // Cambiar sprite a su imagen original
-        try {
-            String ruta = "";
-            switch (id) {
-                case 1: ruta = "assets/corazon_rosa.png"; break;
-                case 2: ruta = "assets/corazon_azul.png"; break;
-                case 3: ruta = "assets/corazon_naranja.png"; break;
-                case 4: ruta = "assets/corazon_verde.png"; break;
-            }
-            sprite = ImageIO.read(new File(ruta));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     
+    
+	public void setVelocidad(int velocidad) {
+		this.velocidad = velocidad;
+	}
     
     public void explotar() {
         explotado = true;
@@ -145,4 +131,8 @@ public class Globo extends Thread {
     public void afectarConViento() {
         velocidad = (int) Math.max(1, velocidad - velocidad *0.1); // Reducir velocidad
     }
+    
+    
+    
+   
 }
