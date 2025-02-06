@@ -17,7 +17,7 @@ public class Techo {
 
         // Cargar sprite
         try {
-            sprite = ImageIO.read(new File("assets/techo.jpg"));
+            sprite = ImageIO.read(new File("assets/techo_morado.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -30,5 +30,31 @@ public class Techo {
 
     public int getY() {
         return y;
+    }
+    
+    // Según el globo que explote primero, el láser cambiará de color al de dicho globo
+    public void cambiarColor(int id) {
+    	
+    	String ruta = "assets/techo_";
+    	
+    	switch(id) {
+    	case 1: ruta+="rosa";
+    	break;
+    	case 2: ruta+= "azul";
+    	break;
+    	case 3: ruta+="naranja";
+    	break; 
+    	case 4: ruta+= "verder";
+    	break;
+    	}
+    	
+    	ruta += ".png";
+    	
+    	// Cargar sprite
+        try {
+            sprite = ImageIO.read(new File(ruta));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
