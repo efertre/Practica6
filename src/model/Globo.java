@@ -26,14 +26,25 @@ public class Globo extends Thread {
         this.id = ++contador;
         this.x = x;
         this.y = y;
-        this.velocidad = (int) (Math.random() * 5 + 2);
+        this.velocidad = (int) (Math.random() * 1.5 + 1.5);
         this.explotado = false;
         this.tiempoInicio = System.currentTimeMillis();
         this.principal = principal;
 
         // Cargar sprite
         try {
-            sprite = ImageIO.read(new File("assets/globo.png"));
+        	String ruta = "";
+        	switch(id) {
+        	case 1: ruta="assets/corazon_rosa.png";
+        	break;
+        	case 2: ruta="assets/corazon_azul.png";
+        	break;
+        	case 3: ruta="assets/corazon_naranja.png";
+        	break;
+        	case 4: ruta="assets/corazon_verde.png";
+        	break;
+        	}
+            sprite = ImageIO.read(new File(ruta));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,16 +60,27 @@ public class Globo extends Thread {
         g2d.drawImage(sprite, transform, null);
     }
 
+    private static final double ANGULO_MAX = Math.toRadians(22.5); // 45 grados en radianes
+    private static final double ANGULO_MIN = -Math.toRadians(22.5); // -45 grados en radianes
+    private static final double BALANCEO_MAX = 0.05; // Rango máximo del cambio de balanceo
+    private static final double BALANCEO_MIN = -0.05; // Rango mínimo del cambio de balanceo
+
     @Override
     public void run() {
         while (true) {
-            if (principal.isCarreraIniciada()&& !explotado) {
+            if (principal.isCarreraIniciada() && !explotado) {
                 y -= velocidad;
-                angulo += Math.random() * 0.2 - 0.1;
+
+                // Generar un pequeño cambio en el balanceo
+                double cambio = Math.random() * (BALANCEO_MAX - BALANCEO_MIN) + BALANCEO_MIN;
+                angulo += cambio;
+
+                // Limitar el ángulo a ±45 grados
+                angulo = Math.max(ANGULO_MIN, Math.min(ANGULO_MAX, angulo));
             }
 
             try {
-                Thread.sleep(1000 / 60);
+                Thread.sleep(1000 / 60); // 60 FPS
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -98,6 +120,6 @@ public class Globo extends Thread {
     }
 
     public void afectarConViento() {
-        velocidad = Math.max(1, velocidad - 1); // Reducir velocidad
+        velocidad = (int) Math.max(1, velocidad - velocidad *0.1); // Reducir velocidad
     }
 }

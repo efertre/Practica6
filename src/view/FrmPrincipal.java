@@ -22,10 +22,11 @@ public class FrmPrincipal extends JFrame {
 
     public FrmPrincipal() {
         super("Carrera de Globos");
-        setSize(650, 760);
+        setSize(695, 760);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         getContentPane().setLayout(null);
         setLocationRelativeTo(null);
+        setResizable(false);
 
         // Inicializar globos
         globos = new ArrayList<>();
@@ -83,7 +84,7 @@ public class FrmPrincipal extends JFrame {
         Graphics offscreen = img.getGraphics();
 
         // Fondo
-        offscreen.setColor(Color.CYAN);
+        offscreen.setColor(Color.white);
         offscreen.fillRect(0, 0, getWidth(), getHeight());
 
         // Dibujar techo
