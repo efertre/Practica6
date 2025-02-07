@@ -17,7 +17,7 @@ public class Techo {
 
         // Cargar sprite
         try {
-            sprite = ImageIO.read(new File("assets/techo_morado.jpg"));
+            sprite = ImageIO.read(new File("assets/techo_morado.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -44,7 +44,7 @@ public class Techo {
     	break;
     	case 3: ruta+="naranja";
     	break; 
-    	case 4: ruta+= "verder";
+    	case 4: ruta+= "verde";
     	break;
     	}
     	

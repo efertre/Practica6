@@ -5,15 +5,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
-import java.io.File;
-import java.io.IOException;
+import java.awt.Rectangle;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -35,6 +34,20 @@ public class FrmPrincipal extends JFrame {
 
 	private GamePanel panelJuego; // Panel para la animación
 
+	// En FrmPrincipal
+	private int fps = 0;
+	private long lastTime = System.currentTimeMillis();
+	
+	private Map<Globo, Integer> ordenLlegada = new LinkedHashMap<>(); // Para almacenar el orden de llegada
+	
+	// Diccionario de nombres personalizados
+	private final String[] nombresGlobos = {
+	    "Rosa ",
+	    "Azul ",
+	    "Naranja ",
+	    "Verde "
+	};
+	
 	public FrmPrincipal() {
 		super("Carrera de Globos");
 		setSize(695, 760);
@@ -46,12 +59,15 @@ public class FrmPrincipal extends JFrame {
 		// Inicializar globos con velocidades únicas
 		globos = new ArrayList<>();
 
-		int[] velocidades = generadorVelocidadAleatoria(); // Rango de velocidades
-		Collections.shuffle(Arrays.asList(velocidades)); // Mezclar las velocidades
-
+		double[] velocidades = { 2.4, 2.2, 1.7, 1.4 }; // Rango de velocidades
+		List<Double> listaVelocidades = new ArrayList<>();
+		for (double velocidad : velocidades) {
+			listaVelocidades.add(velocidad); // Agregar cada elemento al List<Double>
+		}
+		Collections.shuffle(listaVelocidades); // Mezclar las velocidades
 		for (int i = 0; i < 4; i++) {
-			Globo globo = new Globo(50 + i * 150, 500, this);
-			globo.setVelocidad(velocidades[i]); // Asignar velocidad única
+			Globo globo = new Globo(100 + i * 150, 600, this);
+			globo.setVelocidad(listaVelocidades.get(i)); // Asignar velocidad única
 			globos.add(globo);
 		}
 
@@ -87,43 +103,26 @@ public class FrmPrincipal extends JFrame {
 		setVisible(true);
 
 		// Iniciar el ciclo de animación en un hilo
+		// Modificación en el bucle de repintado
 		new Thread(() -> {
-			while (true) {
-				panelJuego.repaint();
-				try {
-					Thread.sleep(1000 / 60); // 60 FPS
-				} catch (InterruptedException ex) {
-					ex.printStackTrace();
-				}
-			}
+		    while (true) {
+		        long now = System.currentTimeMillis();
+		        fps = (int) (1000 / (now - lastTime)); // Calcula FPS
+		        lastTime = now;
+
+		        panelJuego.repaint();
+
+		        try {
+		            Thread.sleep(16); // Aproximadamente 60 FPS (1000ms / 60 ≈ 16ms)
+		        } catch (InterruptedException e) {
+		            e.printStackTrace();
+		        }
+		    }
 		}).start();
 	}
 
-	 public int[] generadorVelocidadAleatoria() {
-	    // Definir un rango pequeño para las velocidades (por ejemplo, entre 2 y 6)
-	    int minVelocidad = 2;
-	    int maxVelocidad = 6;
-
-	    // Crear una lista con todos los números posibles en el rango [minVelocidad, maxVelocidad]
-	    List<Integer> todasLasVelocidades = new ArrayList<>();
-	    for (int i = minVelocidad; i <= maxVelocidad; i++) {
-	        todasLasVelocidades.add(i);
-	    }
-
-	    // Mezclar la lista para obtener un orden aleatorio
-	    Collections.shuffle(todasLasVelocidades);
-
-	    // Seleccionar las primeras 4 velocidades únicas
-	    int[] velocidadesAleatorias = new int[4];
-	    for (int i = 0; i < 4; i++) {
-	        velocidadesAleatorias[i] = todasLasVelocidades.get(i);
-	    }
-
-	    return velocidadesAleatorias;
-	}
-
 	private void reiniciarCarrera() {
-		
+
 		carreraIniciada = false;
 		podioMostrado = false;
 
@@ -142,56 +141,108 @@ public class FrmPrincipal extends JFrame {
 		return true;
 	}
 
+	// Mostrar podio con nombres correctos
+	private void mostrarPodio() {
+	    SwingUtilities.invokeLater(() -> {
+	        StringBuilder podioTexto = new StringBuilder("Podio:\n");
 
-	private void mostrarPodioEnHilo() {
-		SwingUtilities.invokeLater(() -> {
-			Collections.sort(globos, Comparator.comparingInt(Globo::getTiempo));
-			JOptionPane.showMessageDialog(this, "Podio:\n" + "1. Globo " + globos.get(3).getId() + "\n" + "2. Globo "
-					+ globos.get(2).getId() + "\n" + "3. Globo " + globos.get(1).getId() + "\n");
+	        // Ordenar los globos por su posición de llegada
+	        List<Map.Entry<Globo, Integer>> listaOrdenada = new ArrayList<>(ordenLlegada.entrySet());
+	        Collections.sort(listaOrdenada, Comparator.comparing(entry -> entry.getValue()));
 
-			btnReiniciar.setVisible(true);
-		});
+	        // Asignar nombres a los globos según su posición
+	        for (int i = 0; i < listaOrdenada.size(); i++) {
+	            Globo globo = listaOrdenada.get(i).getKey();
+	            int posicion = i + 1;
+	            String nombreGlobo = nombresGlobos[i]; // Usar el nombre correspondiente
+	            podioTexto.append(posicion).append(". ").append(nombreGlobo).append("\n");
+	        }
+
+	        JOptionPane.showMessageDialog(this, podioTexto.toString());
+	        btnReiniciar.setVisible(true);
+	    });
 	}
 
 	public boolean isCarreraIniciada() {
 		return carreraIniciada;
 	}
 
-	// Panel personalizado para el juego
 	private class GamePanel extends JPanel {
 		public GamePanel() {
 			setPreferredSize(new Dimension(695, 600));
-		}
+			addMouseListener(new java.awt.event.MouseAdapter() {
+				@Override
+				public void mouseClicked(java.awt.event.MouseEvent e) {
+					int mouseX = e.getX();
+					int mouseY = e.getY();
 
-		@Override
-		protected void paintComponent(Graphics g) {
-			super.paintComponent(g);
-			setBackground(Color.WHITE);
+					for (Globo globo : globos) {
+						Rectangle bounds = globo.getBounds();
+						if (bounds.contains(mouseX, mouseY)) {
+							// Guardar la velocidad original si no lo hemos hecho antes
+							if (globo.getVelocidadOriginal() == 0) {
+								globo.setVelocidadOriginal(globo.getVelocidad());
+							}
 
-			// Dibujar techo
-			techo.dibujar(g);
+							// Reducir la velocidad
+							double nuevaVelocidad = Math.max(globo.getVelocidad() - 0.5, 0.5);
+							globo.setVelocidad(nuevaVelocidad);
 
-			// Dibujar globos
-			for (Globo globo : globos) {
-				globo.dibujar(g);
-			}
-
-			// Control de colisiones y fin de carrera
-			if (carreraIniciada) {
-				for (Globo globo : globos) {
-					if (globo.getY() <= techo.getY() + 100) {
-						globo.explotar();
+							// Restaurar la velocidad después de 3 segundos
+							new Thread(() -> {
+								try {
+									Thread.sleep(500); // Esperar 3 segundos
+									globo.setVelocidad(globo.getVelocidadOriginal()); // Restaurar velocidad
+								} catch (InterruptedException ex) {
+									ex.printStackTrace();
+								}
+							}).start();
+						}
 					}
 				}
-				if (todosExplotados() && !podioMostrado) {
-					podioMostrado = true;
-					mostrarPodioEnHilo();
-				}
-			}
+			});
+
+		}
+
+		// Modificación en GamePanel -> paintComponent()
+		@Override
+		protected void paintComponent(Graphics g) {
+		    super.paintComponent(g);
+		    setBackground(Color.WHITE);
+
+		    // Dibujar techo
+		    techo.dibujar(g);
+
+		    // Dibujar globos
+		    for (Globo globo : globos) {
+		        globo.dibujar(g);
+		    }
+
+		    // Mostrar FPS en la pantalla
+		    g.setColor(Color.BLACK);
+		    g.drawString("FPS: " + fps, 10, 20);
+
+		    // Control de colisiones y fin de carrera
+		    if (carreraIniciada) {
+		        for (Globo globo : globos) {
+		            if (globo.getY() <= techo.getY() + 20 && !ordenLlegada.containsKey(globo)) {
+		                globo.explotar();
+		                registrarLlegada(globo);
+		            }
+		        }
+
+		        if (ordenLlegada.size() == globos.size() && !podioMostrado) {
+		            podioMostrado = true;
+		            mostrarPodio();
+		        }
+		    }
+		}
+
+		private void registrarLlegada(Globo globo) {
+		    if (!ordenLlegada.containsKey(globo)) {
+		        ordenLlegada.put(globo, ordenLlegada.size() + 1);
+		    }
 		}
 	}
 
-	public static void main(String[] args) {
-		new FrmPrincipal();
-	}
 }
