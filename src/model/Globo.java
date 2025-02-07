@@ -199,7 +199,10 @@ public class Globo extends Thread {
 	}
 
 	public Rectangle getBounds() {
-		return new Rectangle(x, y, sprite.getWidth(), sprite.getHeight());
+	    double scaleFactor = 0.25; // Debe coincidir con el de `dibujar`
+	    int ancho = (int) (sprite.getWidth() * scaleFactor);
+	    int alto = (int) (sprite.getHeight() * scaleFactor);
+	    return new Rectangle(x, y, ancho, alto);
 	}
 
 	
