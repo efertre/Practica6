@@ -31,6 +31,8 @@ public class FrmPrincipal extends JFrame {
 	private JButton btnIniciar;
 	private JButton btnReiniciar;
 	private boolean podioMostrado = false;
+	
+	private int orden = 4;
 
 	private GamePanel panelJuego; // Panel para la animación
 
@@ -214,12 +216,14 @@ public class FrmPrincipal extends JFrame {
 		    g.setColor(Color.WHITE);
 		    g.drawString("FPS: " + fps, 325, 680);
 
-		    // Control de colisiones y fin de carrera
+
 		    if (carreraIniciada) {
 		        for (Globo globo : globos) {
-		            if (globo.getY() <= techo.getY() + 20 && !ordenLlegada.containsValue(globo)) {
+		        	// Si un globo llega al techo, se añade su orden al mapa y se explota (si no está ya dentro del mismo)
+		            if (globo.getY() <= techo.getY() + 60 && !ordenLlegada.containsValue(globo)) {
 		                globo.explotar();
-		                ordenLlegada.put(ordenLlegada.size() + 1, globo);
+		                
+		                ordenLlegada.put(orden--, globo);
 		            }
 		        }
 		        if (ordenLlegada.size() == globos.size() && !podioMostrado) {
