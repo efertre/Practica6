@@ -17,7 +17,7 @@ public class Techo {
 
         // Cargar sprite
         try {
-            sprite = ImageIO.read(new File("assets/techo_morado.png"));
+            sprite = ImageIO.read(new File("assets/techo_fuego.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }

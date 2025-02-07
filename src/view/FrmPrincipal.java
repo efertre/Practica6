@@ -6,9 +6,9 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,9 +37,8 @@ public class FrmPrincipal extends JFrame {
 	// En FrmPrincipal
 	private int fps = 0;
 	private long lastTime = System.currentTimeMillis();
-	
+
 	private Map<Integer, Globo> ordenLlegada = new LinkedHashMap<>(); // Para almacenar el orden de llegada
-	
 
 	public FrmPrincipal() {
 		super("Carrera de Globos");
@@ -59,7 +58,7 @@ public class FrmPrincipal extends JFrame {
 		}
 		Collections.shuffle(listaVelocidades); // Mezclar las velocidades
 		for (int i = 0; i < 4; i++) {
-			Globo globo = new Globo(100 + i * 150, 600, this);
+			Globo globo = new Globo(80 + i * 150, 575, this);
 			globo.setVelocidad(listaVelocidades.get(i)); // Asignar velocidad única
 			globos.add(globo);
 		}
@@ -98,19 +97,19 @@ public class FrmPrincipal extends JFrame {
 		// Iniciar el ciclo de animación en un hilo
 		// Modificación en el bucle de repintado
 		new Thread(() -> {
-		    while (true) {
-		        long now = System.currentTimeMillis();
-		        fps = (int) (1000 / (now - lastTime)); // Calcula FPS
-		        lastTime = now;
+			while (true) {
+				long now = System.currentTimeMillis();
+				fps = (int) (1000 / (now - lastTime)); // Calcula FPS
+				lastTime = now;
 
-		        panelJuego.repaint();
+				panelJuego.repaint();
 
-		        try {
-		            Thread.sleep(16); // Aproximadamente 60 FPS (1000ms / 60 ≈ 16ms)
-		        } catch (InterruptedException e) {
-		            e.printStackTrace();
-		        }
-		    }
+				try {
+					Thread.sleep(16); // Aproximadamente 60 FPS (1000ms / 60 ≈ 16ms)
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}).start();
 	}
 
@@ -125,26 +124,23 @@ public class FrmPrincipal extends JFrame {
 		JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
 	}
 
-	
-
 	// Mostrar podio con nombres correctos
 	private void mostrarPodio() {
-	    SwingUtilities.invokeLater(() -> {
-	        StringBuilder podioTexto = new StringBuilder("Podio:\n");
+		SwingUtilities.invokeLater(() -> {
+			StringBuilder podioTexto = new StringBuilder("Podio:\n");
 
-	        
-	        // Asignar nombres a los globos según su posición
-	        for (int i = 0; i < ordenLlegada.size(); i++) {
-	        	
-	        	int posicion = i + 1;
-	        	
-	            String nombreGlobo = ordenLlegada.get(posicion).getNombre();// Usar el nombre correspondiente
-	            podioTexto.append(posicion).append(". ").append(nombreGlobo).append("\n");
-	        }
+			// Asignar nombres a los globos según su posición
+			for (int i = 0; i < ordenLlegada.size(); i++) {
 
-	        JOptionPane.showMessageDialog(this, podioTexto.toString());
-	        btnReiniciar.setVisible(true);
-	    });
+				int posicion = i + 1;
+
+				String nombreGlobo = ordenLlegada.get(posicion).getNombre();// Usar el nombre correspondiente
+				podioTexto.append(posicion).append(". ").append(nombreGlobo).append("\n");
+			}
+
+			JOptionPane.showMessageDialog(this, podioTexto.toString());
+			btnReiniciar.setVisible(true);
+		});
 	}
 
 	public boolean isCarreraIniciada() {
@@ -154,8 +150,18 @@ public class FrmPrincipal extends JFrame {
 	private class GamePanel extends JPanel {
 		private static final long serialVersionUID = 1L;
 
+		private BufferedImage backgroundImage;
+
 		public GamePanel() {
 			setPreferredSize(new Dimension(695, 600));
+
+			try {
+				backgroundImage = javax.imageio.ImageIO.read(getClass().getResource("/imagen/fondo.jpg"));
+				System.out.println(backgroundImage);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			addMouseListener(new java.awt.event.MouseAdapter() {
 				@Override
 				public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -165,20 +171,17 @@ public class FrmPrincipal extends JFrame {
 					for (Globo globo : globos) {
 						Rectangle bounds = globo.getBounds();
 						if (bounds.contains(mouseX, mouseY)) {
-							// Guardar la velocidad original si no lo hemos hecho antes
 							if (globo.getVelocidadOriginal() == 0) {
 								globo.setVelocidadOriginal(globo.getVelocidad());
 							}
 
-							// Reducir la velocidad
-							double nuevaVelocidad = Math.max(globo.getVelocidad() - 0.5, 0.5);
+							double nuevaVelocidad = Math.max(globo.getVelocidad() - 2, 0.5);
 							globo.setVelocidad(nuevaVelocidad);
 
-							// Restaurar la velocidad después de 3 segundos
 							new Thread(() -> {
 								try {
-									Thread.sleep(500); // Esperar 3 segundos
-									globo.setVelocidad(globo.getVelocidadOriginal()); // Restaurar velocidad
+									Thread.sleep(500);
+									globo.setVelocidad(globo.getVelocidadOriginal());
 								} catch (InterruptedException ex) {
 									ex.printStackTrace();
 								}
@@ -190,33 +193,35 @@ public class FrmPrincipal extends JFrame {
 
 		}
 
-		// Modificación en GamePanel -> paintComponent()
 		@Override
 		protected void paintComponent(Graphics g) {
 		    super.paintComponent(g);
-		    setBackground(Color.WHITE);
 
-		    // Dibujar techo
+		    // Dibujar la imagen de fondo
+		    if (backgroundImage != null) {
+		        g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+		    }
+
+		    // Dibujar el techo
 		    techo.dibujar(g);
 
-		    // Dibujar globos
+		    // Dibujar los globos
 		    for (Globo globo : globos) {
 		        globo.dibujar(g);
 		    }
 
-		    // Mostrar FPS en la pantalla
-		    g.setColor(Color.BLACK);
-		    g.drawString("FPS: " + fps, 10, 20);
+		    // Mostrar FPS
+		    g.setColor(Color.WHITE);
+		    g.drawString("FPS: " + fps, 325, 680);
 
 		    // Control de colisiones y fin de carrera
 		    if (carreraIniciada) {
 		        for (Globo globo : globos) {
-		            if (globo.getY() <= techo.getY() + 20 && !ordenLlegada.containsKey(globo)) {
+		            if (globo.getY() <= techo.getY() + 20 && !ordenLlegada.containsValue(globo)) {
 		                globo.explotar();
-		                registrarLlegada(globo);
+		                ordenLlegada.put(ordenLlegada.size() + 1, globo);
 		            }
 		        }
-
 		        if (ordenLlegada.size() == globos.size() && !podioMostrado) {
 		            podioMostrado = true;
 		            mostrarPodio();
@@ -224,10 +229,11 @@ public class FrmPrincipal extends JFrame {
 		    }
 		}
 
+
 		private void registrarLlegada(Globo globo) {
-		    if (!ordenLlegada.containsValue(globo)) {
-		        ordenLlegada.put(ordenLlegada.size() + 1, globo );
-		    }
+			if (!ordenLlegada.containsValue(globo)) {
+				ordenLlegada.put(ordenLlegada.size() + 1, globo);
+			}
 		}
 	}
 

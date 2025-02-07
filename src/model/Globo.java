@@ -68,7 +68,7 @@ public class Globo extends Thread {
 
 	public void dibujar(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
-		double scaleFactor = 0.35; // Factor de escala para reducir el tamaño al 50%
+		double scaleFactor = 0.25; // Factor de escala para reducir el tamaño al 50%
 		int spriteWidth = sprite.getWidth();
 		int spriteHeight = sprite.getHeight();
 
@@ -130,10 +130,10 @@ public class Globo extends Thread {
 		}
 		this.velocidad = nuevaVelocidad;
 
-		// Restaurar la velocidad después de 3 segundos
+		// Restaurar la velocidad después de 0.5 segundos
 		new Thread(() -> {
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(500);
 				this.velocidad = velocidadOriginal; // Restaurar velocidad
 			} catch (InterruptedException ex) {
 				ex.printStackTrace();
@@ -181,10 +181,7 @@ public class Globo extends Thread {
 		return new Rectangle(x, y, sprite.getWidth(), sprite.getHeight());
 	}
 
-	public void afectarConViento() {
-		velocidad = (int) Math.max(1, velocidad - velocidad * 0.1); // Reducir velocidad
-	}
-
+	
 	public double getVelocidad() {
 
 		return velocidad;
