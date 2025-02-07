@@ -38,16 +38,9 @@ public class FrmPrincipal extends JFrame {
 	private int fps = 0;
 	private long lastTime = System.currentTimeMillis();
 	
-	private Map<Globo, Integer> ordenLlegada = new LinkedHashMap<>(); // Para almacenar el orden de llegada
+	private Map<Integer, Globo> ordenLlegada = new LinkedHashMap<>(); // Para almacenar el orden de llegada
 	
-	// Diccionario de nombres personalizados
-	private final String[] nombresGlobos = {
-	    "Rosa ",
-	    "Azul ",
-	    "Naranja ",
-	    "Verde "
-	};
-	
+
 	public FrmPrincipal() {
 		super("Carrera de Globos");
 		setSize(695, 760);
@@ -132,29 +125,20 @@ public class FrmPrincipal extends JFrame {
 		JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
 	}
 
-	private boolean todosExplotados() {
-		for (Globo globo : globos) {
-			if (!globo.isExplotado()) {
-				return false;
-			}
-		}
-		return true;
-	}
+	
 
 	// Mostrar podio con nombres correctos
 	private void mostrarPodio() {
 	    SwingUtilities.invokeLater(() -> {
 	        StringBuilder podioTexto = new StringBuilder("Podio:\n");
 
-	        // Ordenar los globos por su posición de llegada
-	        List<Map.Entry<Globo, Integer>> listaOrdenada = new ArrayList<>(ordenLlegada.entrySet());
-	        Collections.sort(listaOrdenada, Comparator.comparing(entry -> entry.getValue()));
-
+	        
 	        // Asignar nombres a los globos según su posición
-	        for (int i = 0; i < listaOrdenada.size(); i++) {
-	            Globo globo = listaOrdenada.get(i).getKey();
-	            int posicion = i + 1;
-	            String nombreGlobo = nombresGlobos[i]; // Usar el nombre correspondiente
+	        for (int i = 0; i < ordenLlegada.size(); i++) {
+	        	
+	        	int posicion = i + 1;
+	        	
+	            String nombreGlobo = ordenLlegada.get(posicion).getNombre();// Usar el nombre correspondiente
 	            podioTexto.append(posicion).append(". ").append(nombreGlobo).append("\n");
 	        }
 
@@ -168,6 +152,8 @@ public class FrmPrincipal extends JFrame {
 	}
 
 	private class GamePanel extends JPanel {
+		private static final long serialVersionUID = 1L;
+
 		public GamePanel() {
 			setPreferredSize(new Dimension(695, 600));
 			addMouseListener(new java.awt.event.MouseAdapter() {
@@ -239,8 +225,8 @@ public class FrmPrincipal extends JFrame {
 		}
 
 		private void registrarLlegada(Globo globo) {
-		    if (!ordenLlegada.containsKey(globo)) {
-		        ordenLlegada.put(globo, ordenLlegada.size() + 1);
+		    if (!ordenLlegada.containsValue(globo)) {
+		        ordenLlegada.put(ordenLlegada.size() + 1, globo );
 		    }
 		}
 	}

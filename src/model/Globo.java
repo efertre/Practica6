@@ -20,6 +20,7 @@ public class Globo extends Thread {
 	private double angulo = 0; // Ángulo para el balanceo
 	private BufferedImage sprite; // Sprite del globo
 	private FrmPrincipal principal;
+	private String nombre;
 
 	private double velocidad;
 	private double velocidadOriginal; // Guarda la velocidad inicial
@@ -39,15 +40,22 @@ public class Globo extends Thread {
 			switch (id) {
 			case 1:
 				ruta = "assets/corazon_rosa.png";
+				nombre = "Rojo";
 				break;
 			case 2:
 				ruta = "assets/corazon_azul.png";
+				nombre = "Azul";
+
 				break;
 			case 3:
 				ruta = "assets/corazon_naranja.png";
+				nombre = "Amarillo";
+
 				break;
 			case 4:
 				ruta = "assets/corazon_verde.png";
+				nombre = "Verde";
+
 				break;
 			}
 			sprite = ImageIO.read(new File(ruta));
@@ -163,6 +171,10 @@ public class Globo extends Thread {
 
 	public int getTiempo() {
 		return tiempo;
+	}
+	
+	public String getNombre() {
+		return nombre;
 	}
 
 	public Rectangle getBounds() {
