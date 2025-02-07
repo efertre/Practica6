@@ -24,6 +24,8 @@ import model.Techo;
 
 public class FrmPrincipal extends JFrame {
 
+	private static final long serialVersionUID = 1L;
+	
 	private ArrayList<Globo> globos;
 	private Techo techo;
 	private boolean carreraIniciada = false;
@@ -116,14 +118,31 @@ public class FrmPrincipal extends JFrame {
 	}
 
 	private void reiniciarCarrera() {
+	    carreraIniciada = false;
+	    podioMostrado = false;
+	    btnIniciar.setEnabled(true);
+	    btnReiniciar.setVisible(false);
 
-		carreraIniciada = false;
-		podioMostrado = false;
+	    // Resetear el orden de llegada
+	    ordenLlegada.clear();
+	    orden = 4;
 
-		btnIniciar.setEnabled(true);
-		btnReiniciar.setVisible(false);
+	    // Resetear globos a su posición inicial y velocidad
+	    double[] velocidades = {2.4, 2.2, 1.7, 1.4}; 
+	    List<Double> listaVelocidades = new ArrayList<>();
+	    for (double velocidad : velocidades) {
+	        listaVelocidades.add(velocidad);
+	    }
+	    Collections.shuffle(listaVelocidades); // Mezclar velocidades nuevamente
 
-		JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
+	    for (int i = 0; i < globos.size(); i++) {
+	        globos.get(i).resetear(80 + i * 150, 575, listaVelocidades.get(i));
+	    }
+
+	    // Redibujar el juego
+	    panelJuego.repaint();
+
+	    JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
 	}
 
 	// Mostrar podio con nombres correctos
@@ -222,7 +241,7 @@ public class FrmPrincipal extends JFrame {
 		        	// Si un globo llega al techo, se añade su orden al mapa y se explota (si no está ya dentro del mismo)
 		            if (globo.getY() <= techo.getY() + 60 && !ordenLlegada.containsValue(globo)) {
 		                globo.explotar();
-		                
+		            
 		                ordenLlegada.put(orden--, globo);
 		            }
 		        }
@@ -234,11 +253,7 @@ public class FrmPrincipal extends JFrame {
 		}
 
 
-		private void registrarLlegada(Globo globo) {
-			if (!ordenLlegada.containsValue(globo)) {
-				ordenLlegada.put(ordenLlegada.size() + 1, globo);
-			}
-		}
+
 	}
 
 }

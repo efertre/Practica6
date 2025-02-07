@@ -123,6 +123,27 @@ public class Globo extends Thread {
 	public void setVelocidad(double velocidad) {
 		this.velocidad = velocidad;
 	}
+	
+	public void resetear(int nuevoX, int nuevoY, double nuevaVelocidad) {
+	    this.x = nuevoX;
+	    this.y = nuevoY;
+	    this.velocidad = nuevaVelocidad;
+	    this.explotado = false;
+	    this.angulo = 0; 
+
+	    try {
+	        String ruta = "";
+	        switch (id) {
+	            case 1: ruta = "assets/corazon_rosa.png"; break;
+	            case 2: ruta = "assets/corazon_azul.png"; break;
+	            case 3: ruta = "assets/corazon_naranja.png"; break;
+	            case 4: ruta = "assets/corazon_verde.png"; break;
+	        }
+	        sprite = ImageIO.read(new File(ruta));
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
 
 	public void setVelocidadOriginal(double nuevaVelocidad) {
 		if (velocidadOriginal == 0) { // Solo guardamos la velocidad original una vez
