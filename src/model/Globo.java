@@ -24,6 +24,8 @@ public class Globo extends Thread {
 
 	private double velocidad;
 	private double velocidadOriginal; // Guarda la velocidad inicial
+	
+	private boolean frenado;
 
 	public Globo(int x, int y, FrmPrincipal principal) {
 		this.id = ++contador;
@@ -48,7 +50,7 @@ public class Globo extends Thread {
 
 				break;
 			case 3:
-				ruta = "assets/corazon_naranja.png";
+				ruta = "assets/corazon_amarillo.png";
 				nombre = "Amarillo";
 
 				break;
@@ -65,8 +67,81 @@ public class Globo extends Thread {
 
 		start();
 	}
+	
+	
+	public boolean isFrenado() {
+		return frenado;
+	}
+
+
+	public void setFrenado(boolean frenado) {
+		this.frenado = frenado;
+		
+		if(!frenado) {
+			String ruta = "";
+			switch (id) {
+			case 1:
+				ruta = "assets/corazon_rosa.png";
+				nombre = "Rojo";
+				break;
+			case 2:
+				ruta = "assets/corazon_azul.png";
+				nombre = "Azul";
+
+				break;
+			case 3:
+				ruta = "assets/corazon_amarillo.png";
+				nombre = "Amarillo";
+
+				break;
+			case 4:
+				ruta = "assets/corazon_verde.png";
+				nombre = "Verde";
+
+				break;
+			}
+			try {
+				sprite = ImageIO.read(new File(ruta));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			String ruta = "";
+			switch (id) {
+			case 1:
+				ruta = "assets/corazon_rosa_frenado.png";
+				nombre = "Rojo";
+				break;
+			case 2:
+				ruta = "assets/corazon_azul_frenado.png";
+				nombre = "Azul";
+
+				break;
+			case 3:
+				ruta = "assets/corazon_amarillo_frenado.png";
+				nombre = "Amarillo";
+
+				break;
+			case 4:
+				ruta = "assets/corazon_verde_frenado.png";
+				nombre = "Verde";
+
+				break;
+			}
+			try {
+				sprite = ImageIO.read(new File(ruta));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public void dibujar(Graphics g) {
+		
+		
+		
 		Graphics2D g2d = (Graphics2D) g;
 		double scaleFactor = 0.25; // Factor de escala para reducir el tamaño al 50%
 		int spriteWidth = sprite.getWidth();

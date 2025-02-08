@@ -188,11 +188,13 @@ public class FrmPrincipal extends JFrame {
 				public void mouseClicked(java.awt.event.MouseEvent e) {
 					int mouseX = e.getX();
 					int mouseY = e.getY();
+					
 
 					for (Globo globo : globos) {
 						Rectangle bounds = globo.getBounds();
 						if (bounds.contains(mouseX, mouseY)) {
 							if (globo.getVelocidadOriginal() == 0) {
+								globo.setFrenado(true);
 								globo.setVelocidadOriginal(globo.getVelocidad());
 							}
 
@@ -202,6 +204,7 @@ public class FrmPrincipal extends JFrame {
 							new Thread(() -> {
 								try {
 									Thread.sleep(500);
+									globo.setFrenado(false);
 									globo.setVelocidad(globo.getVelocidadOriginal());
 								} catch (InterruptedException ex) {
 									ex.printStackTrace();
