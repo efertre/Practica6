@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -23,310 +22,300 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-
 import model.Globo;
 import model.Techo;
 import java.awt.Toolkit;
 
 public class FrmPrincipal extends JFrame {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    // Lista de globos participantes
+    private ArrayList<Globo> globos;
 
-	private ArrayList<Globo> globos;
-	private Techo techo;
-	private boolean carreraIniciada = false;
+    // Objeto Techo que representa la línea de llegada
+    private Techo techo;
 
-	private JButton btnIniciar;
-	private JButton btnReiniciar;
-	private boolean podioMostrado = false;
+    // Variable para controlar si la carrera ha comenzado
+    private boolean carreraIniciada = false;
 
-	private int orden = 4;
+    // Botones para iniciar y reiniciar la carrera
+    private JButton btnIniciar;
+    private JButton btnReiniciar;
 
-	private GamePanel panelJuego; // Panel para la animación
+    // Variable para saber si el podio ya fue mostrado
+    private boolean podioMostrado = false;
 
-	// En FrmPrincipal
-	private int fps = 0;
-	private long lastTime = System.currentTimeMillis();
+    // Variable para llevar el orden de llegada de los globos
+    private int orden = 4;
 
-	private Map<Integer, Globo> ordenLlegada = new LinkedHashMap<>(); // Para almacenar el orden de llegada
+    // Panel principal donde se dibuja la animación
+    private GamePanel panelJuego;
 
-	private Clip clip; // Atributo para la música
+    // Variables para calcular los FPS
+    private int fps = 0;
+    private long lastTime = System.currentTimeMillis();
 
-	public FrmPrincipal() {
-		super("HellRace");
-		setIconImage(Toolkit.getDefaultToolkit().getImage(FrmPrincipal.class.getResource("/imagen/corazon_rosa.png")));
-		
+    // Mapa para almacenar el orden de llegada de los globos
+    private Map<Integer, Globo> ordenLlegada = new LinkedHashMap<>();
 
-		try {
-			// Cambiar el Look and Feel a Nimbus
-				UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+    // Atributo para manejar la reproducción de música
+    private Clip clip;
 
-		setSize(695, 760);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setLocationRelativeTo(null);
-		setResizable(false);
-		getContentPane().setLayout(new BorderLayout());
+    public FrmPrincipal() {
+        super("HellRace"); // Título de la ventana
 
-		// Inicializar globos con velocidades únicas
-		globos = new ArrayList<>();
+        // Establecer el ícono de la ventana
+        setIconImage(Toolkit.getDefaultToolkit().getImage(FrmPrincipal.class.getResource("/imagen/corazon_rosa.png")));
 
-		double[] velocidades = { 2.4, 2.2, 1.7, 1.4 }; // Rango de velocidades
-		List<Double> listaVelocidades = new ArrayList<>();
-		for (double velocidad : velocidades) {
-			listaVelocidades.add(velocidad); // Agregar cada elemento al List<Double>
-		}
-		Collections.shuffle(listaVelocidades); // Mezclar las velocidades
-		for (int i = 0; i < 4; i++) {
-			Globo globo = new Globo(80 + i * 150, 575, this);
-			globo.setVelocidad(listaVelocidades.get(i)); // Asignar velocidad única
-			globos.add(globo);
-		}
+        try {
+            // Cambiar el "Look and Feel" a Nimbus para darle un estilo moderno
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (Exception e) {
+            e.printStackTrace(); // Capturar errores al cambiar el Look and Feel
+        }
 
-		// Inicializar techo
-		techo = new Techo(0, 0);
+        setSize(695, 760); // Dimensiones de la ventana
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Cerrar la aplicación al cerrar la ventana
+        setLocationRelativeTo(null); // Centrar la ventana en la pantalla
+        setResizable(false); // Hacer la ventana no redimensionable
+        getContentPane().setLayout(new BorderLayout()); // Layout principal
 
-		// Crear el panel de juego
-		panelJuego = new GamePanel();
-		getContentPane().add(panelJuego, BorderLayout.CENTER);
+        // Inicializar los globos con velocidades únicas
+        globos = new ArrayList<>();
+        double[] velocidades = {2.4, 2.2, 1.7, 1.4}; // Rango de velocidades
+        List<Double> listaVelocidades = new ArrayList<>();
+        for (double velocidad : velocidades) {
+            listaVelocidades.add(velocidad); // Agregar cada velocidad a una lista
+        }
+        Collections.shuffle(listaVelocidades); // Mezclar las velocidades aleatoriamente
+        for (int i = 0; i < 4; i++) {
+            Globo globo = new Globo(80 + i * 150, 575, this); // Crear globos con posiciones iniciales
+            globo.setVelocidad(listaVelocidades.get(i)); // Asignar velocidades únicas
+            globos.add(globo);
+        }
 
-		// Panel de controles
-		JPanel panelControles = new JPanel();
-		panelControles.setBackground(new Color(0, 0, 0));
-		panelControles.setLayout(new FlowLayout());
+        // Inicializar el techo
+        techo = new Techo(0, 0);
 
-		// Botón para iniciar la carrera
-		btnIniciar = new JButton("Iniciar Carrera");
-		btnIniciar.setForeground(new Color(0, 0, 0));
-		btnIniciar.setBackground(new Color(255, 69, 0));
-		btnIniciar.addActionListener(e -> {
-			carreraIniciada = true;
-			
-			podioMostrado = false;
-			playMusic(); // Inicia la música al comenzar la carrera
-		});
+        // Crear el panel de juego
+        panelJuego = new GamePanel();
+        getContentPane().add(panelJuego, BorderLayout.CENTER); // Agregar el panel al centro
 
-		panelControles.add(btnIniciar);
+        // Crear el panel de controles
+        JPanel panelControles = new JPanel();
+        panelControles.setBackground(new Color(0, 0, 0)); // Fondo negro
+        panelControles.setLayout(new FlowLayout());
 
-		// Botón para reiniciar la carrera
-		btnReiniciar = new JButton("Reiniciar Carrera");
-		btnReiniciar.setForeground(new Color(0, 0, 0));
-		btnReiniciar.setBackground(new Color(255, 69, 0));
-		btnReiniciar.addActionListener(e -> reiniciarCarrera());
-		btnReiniciar.setVisible(false);
-		panelControles.add(btnReiniciar);
+        // Botón para iniciar la carrera
+        btnIniciar = new JButton("Iniciar Carrera");
+        btnIniciar.setForeground(new Color(0, 0, 0)); // Texto negro
+        btnIniciar.setBackground(new Color(255, 69, 0)); // Fondo rojo
+        btnIniciar.addActionListener(e -> {
+            carreraIniciada = true; // Activar la carrera
+            podioMostrado = false; // Reiniciar el estado del podio
+            playMusic(); // Reproducir música al iniciar la carrera
+        });
+        panelControles.add(btnIniciar);
 
-		getContentPane().add(panelControles, BorderLayout.SOUTH); // Agregar el panel de controles abajo
+        // Botón para reiniciar la carrera
+        btnReiniciar = new JButton("Reiniciar Carrera");
+        btnReiniciar.setForeground(new Color(0, 0, 0)); // Texto negro
+        btnReiniciar.setBackground(new Color(255, 69, 0)); // Fondo rojo
+        btnReiniciar.addActionListener(e -> reiniciarCarrera());
+        btnReiniciar.setVisible(false); // Ocultar inicialmente
+        panelControles.add(btnReiniciar);
 
-		setVisible(true);
+        getContentPane().add(panelControles, BorderLayout.SOUTH); // Agregar el panel de controles abajo
 
-		// Iniciar el ciclo de animación en un hilo
-		// Modificación en el bucle de repintado
-		new Thread(() -> {
-			while (true) {
-				long now = System.currentTimeMillis();
-				fps = (int) (1000 / (now - lastTime)); // Calcula FPS
-				lastTime = now;
+        setVisible(true); // Mostrar la ventana
 
-				panelJuego.repaint();
+        // Iniciar el ciclo de animación en un hilo separado
+        new Thread(() -> {
+            while (true) {
+                long now = System.currentTimeMillis();
+                fps = (int) (1000 / (now - lastTime)); // Calcular los FPS
+                lastTime = now;
+                panelJuego.repaint(); // Actualizar el panel de juego
+                try {
+                    Thread.sleep(16); // Dormir el hilo para mantener aproximadamente 60 FPS
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
 
-				try {
-					Thread.sleep(16); // Aproximadamente 60 FPS (1000ms / 60 ≈ 16ms)
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}).start();
-	}
+    // Método para reproducir la música de fondo
+    private void playMusic() {
+        try {
+            // Cargar el archivo de audio desde los recursos
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/imagen/musica.wav"));
+            clip = AudioSystem.getClip();
+            clip.open(audioInputStream);
+            clip.loop(Clip.LOOP_CONTINUOUSLY); // Reproducir continuamente
+        } catch (Exception e) {
+            e.printStackTrace(); // Capturar errores al cargar o reproducir la música
+        }
+    }
 
-	// Método para reproducir la música de fondo
-	private void playMusic() {
-		try {
-			// Carga el archivo de audio desde los recursos
-			AudioInputStream audioInputStream = AudioSystem
-					.getAudioInputStream(getClass().getResource("/imagen/musica.wav"));
-			clip = AudioSystem.getClip();
-			clip.open(audioInputStream);
-			// Si deseas que la música se repita continuamente:
-			clip.loop(Clip.LOOP_CONTINUOUSLY);
-			// Si solo quieres reproducirla una vez, usa:
-			// clip.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    // Método para detener la música de fondo
+    private void stopMusic() {
+        if (clip != null && clip.isRunning()) { // Verificar si la música está reproduciéndose
+            clip.stop(); // Detener la música
+            clip.close(); // Cerrar el recurso
+        }
+    }
 
-	private void stopMusic() {
-		if (clip != null && clip.isRunning()) {
-			clip.stop();
-			clip.close();
-		}
-	}
+    // Método para reiniciar la carrera
+    private void reiniciarCarrera() {
+        stopMusic(); // Detener la música si está sonando
+        carreraIniciada = false; // Reiniciar el estado de la carrera
+        podioMostrado = false; // Reiniciar el estado del podio
+        btnIniciar.setText("Iniciar Carrera"); // Restaurar el texto del botón
+        btnReiniciar.setVisible(false); // Ocultar el botón de reinicio
 
-	private void reiniciarCarrera() {
-		// Detener la música si está sonando
-		stopMusic();
+        // Limpiar el orden de llegada
+        ordenLlegada.clear();
+        orden = 4;
 
-		carreraIniciada = false;
-		podioMostrado = false;
-	   
-	    btnIniciar.setText("Iniciar Carrera");
-		btnReiniciar.setVisible(false);
+        // Reiniciar las posiciones y velocidades de los globos
+        double[] velocidades = {2.4, 2.2, 1.7, 1.4};
+        List<Double> listaVelocidades = new ArrayList<>();
+        for (double velocidad : velocidades) {
+            listaVelocidades.add(velocidad);
+        }
+        Collections.shuffle(listaVelocidades); // Mezclar las velocidades nuevamente
+        for (int i = 0; i < globos.size(); i++) {
+            globos.get(i).resetear(80 + i * 150, 575, listaVelocidades.get(i));
+        }
 
-		// Resetear el orden de llegada
-		ordenLlegada.clear();
-		orden = 4;
+        panelJuego.repaint(); // Redibujar el panel de juego
+        JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!"); // Mostrar mensaje de confirmación
+    }
 
-		// Resetear globos a su posición inicial y velocidad
-		double[] velocidades = { 2.4, 2.2, 1.7, 1.4 };
-		List<Double> listaVelocidades = new ArrayList<>();
-		for (double velocidad : velocidades) {
-			listaVelocidades.add(velocidad);
-		}
-		Collections.shuffle(listaVelocidades);
+    // Método para mostrar el podio al finalizar la carrera
+    private void mostrarPodio() {
+        btnIniciar.setText("Ver Resultados"); // Cambiar el texto del botón
+        SwingUtilities.invokeLater(() -> {
+            // Crear el panel del podio
+            PodioPanel podioPanel = new PodioPanel(ordenLlegada);
 
-		for (int i = 0; i < globos.size(); i++) {
-			globos.get(i).resetear(80 + i * 150, 575, listaVelocidades.get(i));
-		}
+            // Mostrar el podio en un cuadro de diálogo
+            JDialog dialog = new JDialog(this, "¡Carrera Finalizada!", true);
+            dialog.getContentPane().add(podioPanel);
+            dialog.pack();
+            dialog.setSize(700, 400);
+            dialog.setLocationRelativeTo(this);
+            dialog.setVisible(true);
 
-		panelJuego.repaint();
+            // Mostrar el botón para reiniciar
+            btnReiniciar.setVisible(true);
+        });
+    }
 
-		JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
+    // Método para verificar si la carrera ha comenzado
+    public boolean isCarreraIniciada() {
+        return carreraIniciada;
+    }
 
-	}
+    // Clase interna para el panel de juego
+    private class GamePanel extends JPanel {
+        private static final long serialVersionUID = 1L;
 
-	private void mostrarPodio() {
-		btnIniciar.setText("Ver Resultados");
-		SwingUtilities.invokeLater(() -> {
-			// Crear el panel del podio
-			PodioPanel podioPanel = new PodioPanel(ordenLlegada);
+        // Imagen de fondo del panel
+        private BufferedImage backgroundImage;
 
-			// Mostrar el podio en un cuadro de diálogo
-			JDialog dialog = new JDialog(this, "¡Carrera Finalizada!", true);
-			dialog.getContentPane().add(podioPanel);
-			dialog.pack();
-			dialog.setSize(700, 400);
-			dialog.setLocationRelativeTo(this);
-			dialog.setVisible(true);
+        public GamePanel() {
+            setPreferredSize(new Dimension(695, 600)); // Dimensiones del panel
 
-			// Mostrar el botón para reiniciar
-			btnReiniciar.setVisible(true);
-		});
-	}
+            // Cargar la imagen de fondo
+            try {
+                backgroundImage = javax.imageio.ImageIO.read(getClass().getResource("/imagen/fondo.jpg"));
+            } catch (Exception e) {
+                e.printStackTrace(); // Capturar errores al cargar la imagen
+            }
 
-	public boolean isCarreraIniciada() {
-		return carreraIniciada;
-	}
+            // Manejador de eventos del ratón
+            addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    if (!carreraIniciada) { // Ignorar clics si la carrera no ha comenzado
+                        return;
+                    }
 
-	private class GamePanel extends JPanel {
-		private static final long serialVersionUID = 1L;
+                    int mouseX = e.getX(); // Coordenada X del clic
+                    int mouseY = e.getY(); // Coordenada Y del clic
 
-		private BufferedImage backgroundImage;
+                    for (Globo globo : globos) {
+                        Rectangle bounds = globo.getBounds(); // Obtener los límites del globo
+                        if (bounds.contains(mouseX, mouseY)) { // Verificar si el clic está dentro del globo
+                            if (globo.isExplotado()) { // Ignorar si el globo ya explotó
+                                continue;
+                            }
+                            if (globo.isFrenado()) { // Ignorar si el globo ya está frenado
+                                continue;
+                            }
 
-		public GamePanel() {
-			setPreferredSize(new Dimension(695, 600));
+                            // Guardar la velocidad original temporalmente
+                            double velocidadOriginalTemporal = globo.getVelocidad();
 
-			try {
-				backgroundImage = javax.imageio.ImageIO.read(getClass().getResource("/imagen/fondo.jpg"));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+                            // Activar el modo frenado y reducir la velocidad
+                            globo.setFrenado(true);
+                            double nuevaVelocidad = Math.max(velocidadOriginalTemporal - 2, 0.5);
+                            globo.setVelocidad(nuevaVelocidad);
 
-			addMouseListener(new java.awt.event.MouseAdapter() {
-				@Override
-				public void mouseClicked(java.awt.event.MouseEvent e) {
-					// No procesar clics si la carrera no ha iniciado
-					if (!carreraIniciada) {
-						return;
-					}
+                            // Restaurar la velocidad después de 500 ms usando un hilo
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(500);
+                                    globo.setFrenado(false);
+                                    globo.setVelocidad(velocidadOriginalTemporal);
+                                } catch (InterruptedException ex) {
+                                    ex.printStackTrace();
+                                }
+                            }).start();
+                        }
+                    }
+                }
+            });
+        }
 
-					int mouseX = e.getX();
-					int mouseY = e.getY();
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
 
-					for (Globo globo : globos) {
-						Rectangle bounds = globo.getBounds();
-						if (bounds.contains(mouseX, mouseY)) {
+            // Dibujar la imagen de fondo
+            if (backgroundImage != null) {
+                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            }
 
-							// Si el globo ya explotó, se ignora el clic
-							if (globo.isExplotado()) {
-								continue;
-							}
+            // Dibujar el techo
+            techo.dibujar(g);
 
-							// Si el globo ya está frenado, se ignora el clic
-							if (globo.isFrenado()) {
-								continue;
-							}
+            // Dibujar los globos
+            for (Globo globo : globos) {
+                globo.dibujar(g);
+            }
 
-							// Se captura la velocidad actual en una variable temporal
-							double velocidadOriginalTemporal = globo.getVelocidad();
+            // Mostrar los FPS
+            g.setColor(Color.WHITE);
+            g.drawString("FPS: " + fps, 325, 680);
 
-							// Activar el modo frenado (cambia la imagen internamente)
-							globo.setFrenado(true);
+            // Verificar si algún globo llegó al techo
+            if (carreraIniciada) {
+                for (Globo globo : globos) {
+                    if (globo.getY() <= techo.getY() + 60 && !ordenLlegada.containsValue(globo)) {
+                        globo.explotar(); // Explotar el globo
+                        ordenLlegada.put(orden--, globo); // Agregar al mapa de orden de llegada
+                    }
+                }
 
-							// Calcular y asignar la nueva velocidad reducida
-							double nuevaVelocidad = Math.max(velocidadOriginalTemporal - 2, 0.5);
-							globo.setVelocidad(nuevaVelocidad);
-
-							// Se lanza un hilo para restaurar la velocidad e imagen original después de 500
-							// ms
-							new Thread(() -> {
-								try {
-									Thread.sleep(500);
-									globo.setFrenado(false);
-									globo.setVelocidad(velocidadOriginalTemporal);
-								} catch (InterruptedException ex) {
-									ex.printStackTrace();
-								}
-							}).start();
-						}
-					}
-				}
-			});
-
-		}
-
-		@Override
-		protected void paintComponent(Graphics g) {
-			super.paintComponent(g);
-
-			// Dibujar la imagen de fondo
-			if (backgroundImage != null) {
-				g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-			}
-
-			// Dibujar el techo
-			techo.dibujar(g);
-
-			// Dibujar los globos
-			for (Globo globo : globos) {
-				globo.dibujar(g);
-			}
-
-			// Mostrar FPS
-			g.setColor(Color.WHITE);
-			g.drawString("FPS: " + fps, 325, 680);
-
-			if (carreraIniciada) {
-				for (Globo globo : globos) {
-					// Si un globo llega al techo, se añade su orden al mapa y se explota (si no
-					// está ya dentro del mismo)
-					if (globo.getY() <= techo.getY() + 60 && !ordenLlegada.containsValue(globo)) {
-						globo.explotar();
-
-						ordenLlegada.put(orden--, globo);
-					}
-				}
-				if (ordenLlegada.size() == globos.size() && !podioMostrado) {
-					podioMostrado = true;
-					mostrarPodio();
-				}
-			}
-
-		}
-
-	}
-
+                // Si todos los globos han llegado, mostrar el podio
+                if (ordenLlegada.size() == globos.size() && !podioMostrado) {
+                    podioMostrado = true;
+                    mostrarPodio();
+                }
+            }
+        }
+    }
 }

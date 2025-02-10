@@ -35,7 +35,7 @@ public class PodioPanel extends JPanel {
         setPreferredSize(new Dimension(695, 300));
 
         // Cargar imágenes desde archivos locales o recursos empaquetados.
-        try {
+        try { 
             // Carga la imagen del podio desde la carpeta "assets".
             podioImagen = ImageIO.read(new File("assets/podio.png")); 
 
