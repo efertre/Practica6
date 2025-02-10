@@ -26,6 +26,7 @@ import javax.swing.UIManager;
 
 import model.Globo;
 import model.Techo;
+import java.awt.Toolkit;
 
 public class FrmPrincipal extends JFrame {
 
@@ -52,14 +53,17 @@ public class FrmPrincipal extends JFrame {
 	private Clip clip; // Atributo para la música
 
 	public FrmPrincipal() {
-		super("Carrera de Globos");
+		super("HellRace");
+		setIconImage(Toolkit.getDefaultToolkit().getImage(FrmPrincipal.class.getResource("/imagen/corazon_rosa.png")));
+		
 
-		 try {
-	            // Cambiar el Look and Feel a Nimbus
-	            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        }
+		try {
+			// Cambiar el Look and Feel a Nimbus
+				UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		setSize(695, 760);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -97,10 +101,10 @@ public class FrmPrincipal extends JFrame {
 		// Botón para iniciar la carrera
 		btnIniciar = new JButton("Iniciar Carrera");
 		btnIniciar.setForeground(new Color(0, 0, 0));
-        btnIniciar.setBackground(new Color(255, 69, 0));
+		btnIniciar.setBackground(new Color(255, 69, 0));
 		btnIniciar.addActionListener(e -> {
 			carreraIniciada = true;
-			btnIniciar.setEnabled(false);
+			btnIniciar.setVisible(false);
 			podioMostrado = false;
 			playMusic(); // Inicia la música al comenzar la carrera
 		});
@@ -109,6 +113,8 @@ public class FrmPrincipal extends JFrame {
 
 		// Botón para reiniciar la carrera
 		btnReiniciar = new JButton("Reiniciar Carrera");
+		btnReiniciar.setForeground(new Color(0, 0, 0));
+		btnReiniciar.setBackground(new Color(255, 69, 0));
 		btnReiniciar.addActionListener(e -> reiniciarCarrera());
 		btnReiniciar.setVisible(false);
 		panelControles.add(btnReiniciar);
@@ -153,8 +159,6 @@ public class FrmPrincipal extends JFrame {
 		}
 	}
 
-	// Opcional: método para detener la música (por ejemplo, al reiniciar la
-	// carrera)
 	private void stopMusic() {
 		if (clip != null && clip.isRunning()) {
 			clip.stop();
@@ -163,52 +167,54 @@ public class FrmPrincipal extends JFrame {
 	}
 
 	private void reiniciarCarrera() {
-	    // Detener la música si está sonando
-	    stopMusic();
+		// Detener la música si está sonando
+		stopMusic();
+
+		carreraIniciada = false;
+		podioMostrado = false;
+	    btnIniciar.setVisible(true);
 	    
-	    carreraIniciada = false;
-	    podioMostrado = false;
-	    btnIniciar.setEnabled(true);
-	    btnReiniciar.setVisible(false);
+		btnReiniciar.setVisible(false);
 
-	    // Resetear el orden de llegada
-	    ordenLlegada.clear();
-	    orden = 4;
+		// Resetear el orden de llegada
+		ordenLlegada.clear();
+		orden = 4;
 
-	    // Resetear globos a su posición inicial y velocidad
-	    double[] velocidades = { 2.4, 2.2, 1.7, 1.4 };
-	    List<Double> listaVelocidades = new ArrayList<>();
-	    for (double velocidad : velocidades) {
-	        listaVelocidades.add(velocidad);
-	    }
-	    Collections.shuffle(listaVelocidades);
+		// Resetear globos a su posición inicial y velocidad
+		double[] velocidades = { 2.4, 2.2, 1.7, 1.4 };
+		List<Double> listaVelocidades = new ArrayList<>();
+		for (double velocidad : velocidades) {
+			listaVelocidades.add(velocidad);
+		}
+		Collections.shuffle(listaVelocidades);
 
-	    for (int i = 0; i < globos.size(); i++) {
-	        globos.get(i).resetear(80 + i * 150, 575, listaVelocidades.get(i));
-	    }
+		for (int i = 0; i < globos.size(); i++) {
+			globos.get(i).resetear(80 + i * 150, 575, listaVelocidades.get(i));
+		}
 
-	    panelJuego.repaint();
+		panelJuego.repaint();
 
-	    JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
+		JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
 	}
 
 	private void mostrarPodio() {
-	    SwingUtilities.invokeLater(() -> {
-	        // Crear el panel del podio
-	        PodioPanel podioPanel = new PodioPanel(ordenLlegada);
+		SwingUtilities.invokeLater(() -> {
+			// Crear el panel del podio
+			PodioPanel podioPanel = new PodioPanel(ordenLlegada);
 
-	        // Mostrar el podio en un cuadro de diálogo
-	        JDialog dialog = new JDialog(this, "¡Carrera Finalizada!", true);
-	        dialog.getContentPane().add(podioPanel);
-	        dialog.pack();
-	        dialog.setSize(700, 400);
-	        dialog.setLocationRelativeTo(this);
-	        dialog.setVisible(true);
+			// Mostrar el podio en un cuadro de diálogo
+			JDialog dialog = new JDialog(this, "¡Carrera Finalizada!", true);
+			dialog.getContentPane().add(podioPanel);
+			dialog.pack();
+			dialog.setSize(700, 400);
+			dialog.setLocationRelativeTo(this);
+			dialog.setVisible(true);
 
-	        // Mostrar el botón para reiniciar
-	        btnReiniciar.setVisible(true);
-	    });
+			// Mostrar el botón para reiniciar
+			btnReiniciar.setVisible(true);
+		});
 	}
+
 	public boolean isCarreraIniciada() {
 		return carreraIniciada;
 	}
@@ -241,12 +247,12 @@ public class FrmPrincipal extends JFrame {
 					for (Globo globo : globos) {
 						Rectangle bounds = globo.getBounds();
 						if (bounds.contains(mouseX, mouseY)) {
-							
+
 							// Si el globo ya explotó, se ignora el clic
-			                if (globo.isExplotado()) {
-			                    continue;
-			                }
-			                
+							if (globo.isExplotado()) {
+								continue;
+							}
+
 							// Si el globo ya está frenado, se ignora el clic
 							if (globo.isFrenado()) {
 								continue;
