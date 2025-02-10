@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 // Clase Techo: Representa el techo en el juego.
-public class Techo {
+public class Techo { 
     // Coordenadas x e y del techo.
     private int x, y;
 
