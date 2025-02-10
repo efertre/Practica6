@@ -104,7 +104,7 @@ public class FrmPrincipal extends JFrame {
 		btnIniciar.setBackground(new Color(255, 69, 0));
 		btnIniciar.addActionListener(e -> {
 			carreraIniciada = true;
-			btnIniciar.setVisible(false);
+			
 			podioMostrado = false;
 			playMusic(); // Inicia la música al comenzar la carrera
 		});
@@ -172,8 +172,8 @@ public class FrmPrincipal extends JFrame {
 
 		carreraIniciada = false;
 		podioMostrado = false;
-	    btnIniciar.setVisible(true);
-	    
+	   
+	    btnIniciar.setText("Iniciar Carrera");
 		btnReiniciar.setVisible(false);
 
 		// Resetear el orden de llegada
@@ -195,9 +195,11 @@ public class FrmPrincipal extends JFrame {
 		panelJuego.repaint();
 
 		JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
+
 	}
 
 	private void mostrarPodio() {
+		btnIniciar.setText("Ver Resultados");
 		SwingUtilities.invokeLater(() -> {
 			// Crear el panel del podio
 			PodioPanel podioPanel = new PodioPanel(ordenLlegada);
