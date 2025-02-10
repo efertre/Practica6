@@ -16,12 +16,10 @@ public class Globo extends Thread {
 	private int id;
 	private int x, y;
 	private boolean explotado;
-	private long tiempoInicio;
-	private int tiempo;
+
 	private double angulo = 0; // Ángulo para el balanceo
 	private BufferedImage sprite; // Sprite del globo
 	private FrmPrincipal principal;
-	private String nombre;
 
 	private static final double ANGULO_MAX = Math.toRadians(22.5); // 45 grados en radianes
 	private static final double BALANCEO_MAX = 0.05; // Rango máximo del cambio de balanceo
@@ -43,7 +41,6 @@ public class Globo extends Thread {
 		this.y = y;
 
 		this.explotado = false;
-		this.tiempoInicio = System.currentTimeMillis();
 		this.principal = principal;
 
 		// Cargar sprite
@@ -52,19 +49,15 @@ public class Globo extends Thread {
 			switch (id) {
 			case 1:
 				ruta = "assets/corazon_rosa.png";
-				nombre = "Rojo";
 				break;
 			case 2:
 				ruta = "assets/corazon_azul.png";
-				nombre = "Azul";
 				break;
 			case 3:
 				ruta = "assets/corazon_amarillo.png";
-				nombre = "Amarillo";
 				break;
 			case 4:
 				ruta = "assets/corazon_verde.png";
-				nombre = "Verde";
 				break;
 			}
 			sprite = ImageIO.read(new File(ruta));
@@ -153,21 +146,17 @@ public class Globo extends Thread {
 			switch (id) {
 			case 1:
 				ruta = "assets/corazon_rosa.png";
-				nombre = "Rojo";
 				break;
 			case 2:
 				ruta = "assets/corazon_azul.png";
-				nombre = "Azul";
 
 				break;
 			case 3:
 				ruta = "assets/corazon_amarillo.png";
-				nombre = "Amarillo";
 
 				break;
 			case 4:
 				ruta = "assets/corazon_verde.png";
-				nombre = "Verde";
 
 				break;
 			}
@@ -182,21 +171,17 @@ public class Globo extends Thread {
 			switch (id) {
 			case 1:
 				ruta = "assets/corazon_rosa_frenado.png";
-				nombre = "Rojo";
 				break;
 			case 2:
 				ruta = "assets/corazon_azul_frenado.png";
-				nombre = "Azul";
 
 				break;
 			case 3:
 				ruta = "assets/corazon_amarillo_frenado.png";
-				nombre = "Amarillo";
 
 				break;
 			case 4:
 				ruta = "assets/corazon_verde_frenado.png";
-				nombre = "Verde";
 
 				break;
 			}
@@ -269,7 +254,7 @@ public class Globo extends Thread {
 
 	public void explotar() {
 		explotado = true;
-		tiempo = (int) (System.currentTimeMillis() - tiempoInicio);
+
 
 		// Iniciar la animación de explosión
 		indiceExplosion = 0;
@@ -289,20 +274,13 @@ public class Globo extends Thread {
 		return id;
 	}
 
-	public int getTiempo() {
-		return tiempo;
-	}
-
-	public String getNombre() {
-		return nombre;
-	}
 
 	public BufferedImage getSprite() {
 		return sprite;
 	}
 
 	public Rectangle getBounds() {
-		double scaleFactor = 0.25; // Debe coincidir con el de `dibujar`
+		double scaleFactor = 0.25; 
 		int ancho = (int) (sprite.getWidth() * scaleFactor);
 		int alto = (int) (sprite.getHeight() * scaleFactor);
 		return new Rectangle(x, y, ancho, alto);
