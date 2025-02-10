@@ -13,6 +13,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -25,7 +28,7 @@ import model.Techo;
 public class FrmPrincipal extends JFrame {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private ArrayList<Globo> globos;
 	private Techo techo;
 	private boolean carreraIniciada = false;
@@ -33,7 +36,7 @@ public class FrmPrincipal extends JFrame {
 	private JButton btnIniciar;
 	private JButton btnReiniciar;
 	private boolean podioMostrado = false;
-	
+
 	private int orden = 4;
 
 	private GamePanel panelJuego; // Panel para la animación
@@ -44,7 +47,10 @@ public class FrmPrincipal extends JFrame {
 
 	private Map<Integer, Globo> ordenLlegada = new LinkedHashMap<>(); // Para almacenar el orden de llegada
 
+	private Clip clip; // Atributo para la música
+
 	public FrmPrincipal() {
+
 		super("Carrera de Globos");
 		setSize(695, 760);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -85,7 +91,9 @@ public class FrmPrincipal extends JFrame {
 			carreraIniciada = true;
 			btnIniciar.setEnabled(false);
 			podioMostrado = false;
+			playMusic(); // Inicia la música al comenzar la carrera
 		});
+
 		panelControles.add(btnIniciar);
 
 		// Botón para reiniciar la carrera
@@ -117,7 +125,36 @@ public class FrmPrincipal extends JFrame {
 		}).start();
 	}
 
+	// Método para reproducir la música de fondo
+	private void playMusic() {
+		try {
+			// Carga el archivo de audio desde los recursos
+			AudioInputStream audioInputStream = AudioSystem
+					.getAudioInputStream(getClass().getResource("/imagen/musica.wav"));
+			clip = AudioSystem.getClip();
+			clip.open(audioInputStream);
+			// Si deseas que la música se repita continuamente:
+			clip.loop(Clip.LOOP_CONTINUOUSLY);
+			// Si solo quieres reproducirla una vez, usa:
+			// clip.start();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	// Opcional: método para detener la música (por ejemplo, al reiniciar la
+	// carrera)
+	private void stopMusic() {
+		if (clip != null && clip.isRunning()) {
+			clip.stop();
+			clip.close();
+		}
+	}
+
 	private void reiniciarCarrera() {
+	    // Detener la música si está sonando
+	    stopMusic();
+	    
 	    carreraIniciada = false;
 	    podioMostrado = false;
 	    btnIniciar.setEnabled(true);
@@ -128,22 +165,22 @@ public class FrmPrincipal extends JFrame {
 	    orden = 4;
 
 	    // Resetear globos a su posición inicial y velocidad
-	    double[] velocidades = {2.4, 2.2, 1.7, 1.4}; 
+	    double[] velocidades = { 2.4, 2.2, 1.7, 1.4 };
 	    List<Double> listaVelocidades = new ArrayList<>();
 	    for (double velocidad : velocidades) {
 	        listaVelocidades.add(velocidad);
 	    }
-	    Collections.shuffle(listaVelocidades); // Mezclar velocidades nuevamente
+	    Collections.shuffle(listaVelocidades);
 
 	    for (int i = 0; i < globos.size(); i++) {
 	        globos.get(i).resetear(80 + i * 150, 575, listaVelocidades.get(i));
 	    }
 
-	    // Redibujar el juego
 	    panelJuego.repaint();
 
 	    JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
 	}
+
 
 	// Mostrar podio con nombres correctos
 	private void mostrarPodio() {
@@ -186,26 +223,45 @@ public class FrmPrincipal extends JFrame {
 			addMouseListener(new java.awt.event.MouseAdapter() {
 				@Override
 				public void mouseClicked(java.awt.event.MouseEvent e) {
+					// No procesar clics si la carrera no ha iniciado
+					if (!carreraIniciada) {
+						return;
+					}
+
 					int mouseX = e.getX();
 					int mouseY = e.getY();
-					
 
 					for (Globo globo : globos) {
 						Rectangle bounds = globo.getBounds();
 						if (bounds.contains(mouseX, mouseY)) {
-							if (globo.getVelocidadOriginal() == 0) {
-								globo.setFrenado(true);
-								globo.setVelocidadOriginal(globo.getVelocidad());
+							
+							// Si el globo ya explotó, se ignora el clic
+			                if (globo.isExplotado()) {
+			                    continue;
+			                }
+			                
+							// Si el globo ya está frenado, se ignora el clic
+							if (globo.isFrenado()) {
+								continue;
 							}
 
-							double nuevaVelocidad = Math.max(globo.getVelocidad() - 2, 0.5);
+							// Se captura la velocidad actual en una variable temporal
+							double velocidadOriginalTemporal = globo.getVelocidad();
+
+							// Activar el modo frenado (cambia la imagen internamente)
+							globo.setFrenado(true);
+
+							// Calcular y asignar la nueva velocidad reducida
+							double nuevaVelocidad = Math.max(velocidadOriginalTemporal - 2, 0.5);
 							globo.setVelocidad(nuevaVelocidad);
 
+							// Se lanza un hilo para restaurar la velocidad e imagen original después de 500
+							// ms
 							new Thread(() -> {
 								try {
 									Thread.sleep(500);
 									globo.setFrenado(false);
-									globo.setVelocidad(globo.getVelocidadOriginal());
+									globo.setVelocidad(velocidadOriginalTemporal);
 								} catch (InterruptedException ex) {
 									ex.printStackTrace();
 								}
@@ -219,43 +275,42 @@ public class FrmPrincipal extends JFrame {
 
 		@Override
 		protected void paintComponent(Graphics g) {
-		    super.paintComponent(g);
+			super.paintComponent(g);
 
-		    // Dibujar la imagen de fondo
-		    if (backgroundImage != null) {
-		        g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
-		    }
+			// Dibujar la imagen de fondo
+			if (backgroundImage != null) {
+				g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+			}
 
-		    // Dibujar el techo
-		    techo.dibujar(g);
+			// Dibujar el techo
+			techo.dibujar(g);
 
-		    // Dibujar los globos
-		    for (Globo globo : globos) {
-		        globo.dibujar(g);
-		    }
+			// Dibujar los globos
+			for (Globo globo : globos) {
+				globo.dibujar(g);
+			}
 
-		    // Mostrar FPS
-		    g.setColor(Color.WHITE);
-		    g.drawString("FPS: " + fps, 325, 680);
+			// Mostrar FPS
+			g.setColor(Color.WHITE);
+			g.drawString("FPS: " + fps, 325, 680);
 
+			if (carreraIniciada) {
+				for (Globo globo : globos) {
+					// Si un globo llega al techo, se añade su orden al mapa y se explota (si no
+					// está ya dentro del mismo)
+					if (globo.getY() <= techo.getY() + 60 && !ordenLlegada.containsValue(globo)) {
+						globo.explotar();
 
-		    if (carreraIniciada) {
-		        for (Globo globo : globos) {
-		        	// Si un globo llega al techo, se añade su orden al mapa y se explota (si no está ya dentro del mismo)
-		            if (globo.getY() <= techo.getY() + 60 && !ordenLlegada.containsValue(globo)) {
-		                globo.explotar();
-		            
-		                ordenLlegada.put(orden--, globo);
-		            }
-		        }
-		        if (ordenLlegada.size() == globos.size() && !podioMostrado) {
-		            podioMostrado = true;
-		            mostrarPodio();
-		        }
-		    }
+						ordenLlegada.put(orden--, globo);
+					}
+				}
+				if (ordenLlegada.size() == globos.size() && !podioMostrado) {
+					podioMostrado = true;
+					mostrarPodio();
+				}
+			}
+
 		}
-
-
 
 	}
 
