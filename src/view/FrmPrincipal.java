@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -145,25 +146,23 @@ public class FrmPrincipal extends JFrame {
 	    JOptionPane.showMessageDialog(this, "¡Carrera reiniciada!");
 	}
 
-	// Mostrar podio con nombres correctos
 	private void mostrarPodio() {
-		SwingUtilities.invokeLater(() -> {
-			StringBuilder podioTexto = new StringBuilder("Podio:\n");
+	    SwingUtilities.invokeLater(() -> {
+	        // Crear el panel del podio
+	        PodioPanel podioPanel = new PodioPanel(ordenLlegada);
 
-			// Asignar nombres a los globos según su posición
-			for (int i = 0; i < ordenLlegada.size(); i++) {
+	        // Mostrar el podio en un cuadro de diálogo
+	        JDialog dialog = new JDialog(this, "¡Carrera Finalizada!", true);
+	        dialog.add(podioPanel);
+	        dialog.pack();
+	        dialog.setSize(700, 400);
+	        dialog.setLocationRelativeTo(this);
+	        dialog.setVisible(true);
 
-				int posicion = i + 1;
-
-				String nombreGlobo = ordenLlegada.get(posicion).getNombre();// Usar el nombre correspondiente
-				podioTexto.append(posicion).append(". ").append(nombreGlobo).append("\n");
-			}
-
-			JOptionPane.showMessageDialog(this, podioTexto.toString());
-			btnReiniciar.setVisible(true);
-		});
+	        // Mostrar el botón para reiniciar
+	        btnReiniciar.setVisible(true);
+	    });
 	}
-
 	public boolean isCarreraIniciada() {
 		return carreraIniciada;
 	}
@@ -178,7 +177,6 @@ public class FrmPrincipal extends JFrame {
 
 			try {
 				backgroundImage = javax.imageio.ImageIO.read(getClass().getResource("/imagen/fondo.jpg"));
-				System.out.println(backgroundImage);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

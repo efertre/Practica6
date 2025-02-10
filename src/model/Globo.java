@@ -197,6 +197,10 @@ public class Globo extends Thread {
 	public String getNombre() {
 		return nombre;
 	}
+	
+	public BufferedImage getSprite() {
+		return sprite;
+	}
 
 	public Rectangle getBounds() {
 	    double scaleFactor = 0.25; // Debe coincidir con el de `dibujar`
