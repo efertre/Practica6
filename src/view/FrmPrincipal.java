@@ -150,9 +150,13 @@ public class FrmPrincipal extends JFrame {
         try {
             // Cargar el archivo de audio desde los recursos
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(getClass().getResource("/imagen/musica.wav"));
-            clip = AudioSystem.getClip();
-            clip.open(audioInputStream);
-            clip.loop(Clip.LOOP_CONTINUOUSLY); // Reproducir continuamente
+            
+            if(clip== null || !clip.isOpen()) { // Verificar que la musica no esté reproduciéndose
+            	clip = AudioSystem.getClip();
+                clip.open(audioInputStream);
+                clip.loop(Clip.LOOP_CONTINUOUSLY); // Reproducir continuamente
+            }
+            
         } catch (Exception e) {
             e.printStackTrace(); // Capturar errores al cargar o reproducir la música
         }
@@ -160,7 +164,7 @@ public class FrmPrincipal extends JFrame {
 
     // Método para detener la música de fondo
     private void stopMusic() {
-        if (clip != null && clip.isRunning()) { // Verificar si la música está reproduciéndose
+        if (clip != null && clip.isRunning()) { // Verificar que la música está reproduciéndose
             clip.stop(); // Detener la música
             clip.close(); // Cerrar el recurso
         }
