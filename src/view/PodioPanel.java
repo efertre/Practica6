@@ -107,10 +107,10 @@ public class PodioPanel extends JPanel {
             // Determina la ruta de la imagen del globo según su ID.
             String ruta = "";
             switch ((int) globo.getId()) {
-                case 1: ruta = "assets/corazon_rosa.png"; break;
-                case 2: ruta = "assets/corazon_azul.png"; break;
-                case 3: ruta = "assets/corazon_amarillo.png"; break;
-                case 4: ruta = "assets/corazon_verde.png"; break;
+                case 1: ruta = "assets/globo_rojo.png"; break;
+                case 2: ruta = "assets/globo_azul.png"; break;
+                case 3: ruta = "assets/globo_amarillo.png"; break;
+                case 4: ruta = "assets/globo_verde.png"; break;
             }
 
             // Dibuja la imagen del globo en la posición especificada.

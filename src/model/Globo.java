@@ -7,23 +7,23 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
 import view.FrmPrincipal;
 
 public class Globo extends Thread {
 
 	private static int contador = 0;
-	private int id;
+	private final int id;
 	private int x, y;
 	private boolean explotado;
 
 	private double angulo = 0; // Ángulo para el balanceo
 	private BufferedImage sprite; // Sprite del globo
-	private FrmPrincipal principal;
+	private final FrmPrincipal principal;
 
-	private static final double ANGULO_MAX = Math.toRadians(22.5); // 45 grados en radianes
+	private static final double ANGULO_MAX = Math.toRadians(22.5); // 22.5° en radianes
 	private static final double BALANCEO_MAX = 0.05; // Rango máximo del cambio de balanceo
 	private static final double BALANCEO_MIN = -0.05; // Rango mínimo del cambio de balanceo
+	private static final double ESCALA_SPRITE = 0.25; // Factor de escala para el sprite
 
 	private double velocidad;
 	private double velocidadOriginal; // Guarda la velocidad inicial
@@ -39,41 +39,14 @@ public class Globo extends Thread {
 		this.id = ++contador;
 		this.x = x;
 		this.y = y;
-
 		this.explotado = false;
 		this.principal = principal;
 
-		// Cargar sprite
-		try {
-			String ruta = "";
-			switch (id) {
-			case 1:
-				ruta = "assets/corazon_rosa.png";
-				break;
-			case 2:
-				ruta = "assets/corazon_azul.png";
-				break;
-			case 3:
-				ruta = "assets/corazon_amarillo.png";
-				break;
-			case 4:
-				ruta = "assets/corazon_verde.png";
-				break;
-			}
-			sprite = ImageIO.read(new File(ruta));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		// Cargar el sprite inicial (no frenado)
+		cargarSprite(false);
 
 		// Cargar imágenes de la explosión
-		imagenesExplosion = new BufferedImage[12];
-		for (int i = 0; i < 12; i++) {
-			try {
-				imagenesExplosion[i] = ImageIO.read(new File("assets/explosion/" + (i + 1) + ".png"));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		cargarExplosionImages();
 
 		// Configurar el Timer para la animación de explosión
 		timerExplosion = new Timer(100, e -> {
@@ -85,31 +58,73 @@ public class Globo extends Thread {
 			}
 		});
 
-		start();
+		start(); // Iniciar el hilo del globo
 	}
 
+	/**
+	 * Carga el sprite según el estado (frenado o no) utilizando el método auxiliar.
+	 */
+	private void cargarSprite(boolean isFrenado) {
+		String ruta = getSpritePath(isFrenado);
+		try {
+			sprite = ImageIO.read(new File(ruta));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Retorna la ruta del sprite según el id del globo y el estado de frenado.
+	 */
+	private String getSpritePath(boolean isFrenado) {
+		String basePath = null;
+		switch (id) {
+		case 1:
+			basePath = "assets/globo_rojo";
+			break;
+		case 2:
+			basePath = "assets/globo_azul";
+			break;
+		case 3:
+			basePath = "assets/globo_amarillo";
+			break;
+		case 4:
+			basePath = "assets/globo_verde";
+			break;
+		}
+		return basePath + (isFrenado ? "_frenado.png" : ".png");
+	}
+
+	/**
+	 * Carga las imágenes de la animación de explosión.
+	 */
+	private void cargarExplosionImages() {
+		imagenesExplosion = new BufferedImage[12];
+		for (int i = 0; i < 12; i++) {
+			try {
+				imagenesExplosion[i] = ImageIO.read(new File("assets/explosion/" + (i + 1) + ".png"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Dibuja el globo aplicando una transformación para posición, escala y
+	 * rotación.
+	 */
 	public void dibujar(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
-		double scaleFactor = 0.25; // Factor de escala para reducir el tamaño al 50%
-		int spriteWidth = sprite.getWidth();
-		int spriteHeight = sprite.getHeight();
-
-		// Guardamos la transformación original para no afectar al resto del dibujo
+		int anchoSprite = sprite.getWidth();
+		int altoSprite = sprite.getHeight();
 		AffineTransform oldTransform = g2d.getTransform();
 
-		// Creamos una nueva transformación
 		AffineTransform transform = new AffineTransform();
-		// Primero trasladamos la imagen a la posición (x, y)
 		transform.translate(x, y);
-		// Aplicamos la escala. Esto reducirá el tamaño del sprite.
-		transform.scale(scaleFactor, scaleFactor);
-		// Aplicamos la rotación alrededor del centro de la imagen original
-		transform.rotate(angulo, spriteWidth / 2.0, spriteHeight / 2.0);
+		transform.scale(ESCALA_SPRITE, ESCALA_SPRITE);
+		transform.rotate(angulo, anchoSprite / 2.0, altoSprite / 2.0);
 
-		// Dibujamos la imagen con la transformación aplicada
 		g2d.drawImage(sprite, transform, null);
-
-		// Restauramos la transformación original
 		g2d.setTransform(oldTransform);
 	}
 
@@ -117,127 +132,58 @@ public class Globo extends Thread {
 	public void run() {
 		while (true) {
 			if (principal.isCarreraIniciada() && !explotado) {
-				// Ajustar el desplazamiento para que sea más perceptible
-				y -= velocidad * (1800.0 / 600); // Convertir velocidad a unidades por segundo
-				// Agregar variabilidad aleatoria
-				y -= Math.random() * 0.5; // Pequeña fluctuación aleatoria
+				// Actualizar posición (subida) y agregar fluctuación aleatoria
+				y -= velocidad * 3;
 
-				// Generar un pequeño cambio en el balanceo
+				// Actualizar el balanceo
 				double cambio = Math.random() * (BALANCEO_MAX - BALANCEO_MIN) + BALANCEO_MIN;
 				angulo += cambio;
-
-				// Limitar el ángulo a ±45 grados
 				angulo = Math.sin(System.currentTimeMillis() / 1000.0) * ANGULO_MAX;
 			}
-
 			try {
-				Thread.sleep(1800 / 30); // Mantener un frame rate alto
+				Thread.sleep(1800 / 30); // Control de frame rate para el globo
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
+	/**
+	 * Cambia el estado de frenado y recarga el sprite correspondiente.
+	 */
 	public void setFrenado(boolean frenado) {
 		this.frenado = frenado;
-
-		if (!frenado) {
-			String ruta = "";
-			switch (id) {
-			case 1:
-				ruta = "assets/corazon_rosa.png";
-				break;
-			case 2:
-				ruta = "assets/corazon_azul.png";
-
-				break;
-			case 3:
-				ruta = "assets/corazon_amarillo.png";
-
-				break;
-			case 4:
-				ruta = "assets/corazon_verde.png";
-
-				break;
-			}
-			try {
-				sprite = ImageIO.read(new File(ruta));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else {
-			String ruta = "";
-			switch (id) {
-			case 1:
-				ruta = "assets/corazon_rosa_frenado.png";
-				break;
-			case 2:
-				ruta = "assets/corazon_azul_frenado.png";
-
-				break;
-			case 3:
-				ruta = "assets/corazon_amarillo_frenado.png";
-
-				break;
-			case 4:
-				ruta = "assets/corazon_verde_frenado.png";
-
-				break;
-			}
-			try {
-				sprite = ImageIO.read(new File(ruta));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		cargarSprite(frenado);
 	}
 
 	public boolean isFrenado() {
 		return frenado;
 	}
 
+	/**
+	 * Reinicia la posición, velocidad y estado del globo.
+	 */
 	public void resetear(int nuevoX, int nuevoY, double nuevaVelocidad) {
 		this.x = nuevoX;
 		this.y = nuevoY;
 		this.velocidad = nuevaVelocidad;
 		this.explotado = false;
 		this.angulo = 0;
-
-		try {
-			String ruta = "";
-			switch (id) {
-			case 1:
-				ruta = "assets/corazon_rosa.png";
-				break;
-			case 2:
-				ruta = "assets/corazon_azul.png";
-				break;
-			case 3:
-				ruta = "assets/corazon_amarillo.png";
-				break;
-			case 4:
-				ruta = "assets/corazon_verde.png";
-				break;
-			}
-			sprite = ImageIO.read(new File(ruta));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		cargarSprite(false);
 	}
 
+	/**
+	 * Cambia temporalmente la velocidad y la restaura después de 500ms.
+	 */
 	public void setVelocidadOriginal(double nuevaVelocidad) {
-		if (velocidadOriginal == 0) { // Solo guardamos la velocidad original una vez
+		if (velocidadOriginal == 0) {
 			velocidadOriginal = velocidad;
 		}
 		this.velocidad = nuevaVelocidad;
-
-		// Restaurar la velocidad después de 0.5 segundos
 		new Thread(() -> {
 			try {
 				Thread.sleep(500);
-				this.velocidad = velocidadOriginal; // Restaurar velocidad
+				this.velocidad = velocidadOriginal;
 			} catch (InterruptedException ex) {
 				ex.printStackTrace();
 			}
@@ -252,11 +198,11 @@ public class Globo extends Thread {
 		return velocidadOriginal;
 	}
 
+	/**
+	 * Inicia la animación de explosión.
+	 */
 	public void explotar() {
 		explotado = true;
-
-
-		// Iniciar la animación de explosión
 		indiceExplosion = 0;
 		sprite = imagenesExplosion[indiceExplosion];
 		timerExplosion.start();
@@ -274,20 +220,20 @@ public class Globo extends Thread {
 		return id;
 	}
 
-
 	public BufferedImage getSprite() {
 		return sprite;
 	}
 
+	/**
+	 * Retorna los límites del globo en función del sprite y la escala.
+	 */
 	public Rectangle getBounds() {
-		double scaleFactor = 0.25; 
-		int ancho = (int) (sprite.getWidth() * scaleFactor);
-		int alto = (int) (sprite.getHeight() * scaleFactor);
+		int ancho = (int) (sprite.getWidth() * ESCALA_SPRITE);
+		int alto = (int) (sprite.getHeight() * ESCALA_SPRITE);
 		return new Rectangle(x, y, ancho, alto);
 	}
 
 	public double getVelocidad() {
-
 		return velocidad;
 	}
 }
