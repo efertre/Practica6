@@ -54,7 +54,12 @@ public class Globo extends Thread {
 				sprite = imagenesExplosion[indiceExplosion];
 			} else {
 				((Timer) e.getSource()).stop(); // Detener el Timer al finalizar la animación
-				sprite = null;
+				try {
+					sprite = ImageIO.read(new File("assets/sprite_vacio.png"));
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				};
 			}
 		});
 

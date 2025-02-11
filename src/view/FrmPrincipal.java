@@ -182,7 +182,7 @@ public class FrmPrincipal extends JFrame {
 	// Método para reiniciar la carrera
 	private void reiniciarCarrera() {
 		pararMusica(); // Detener la música si está sonando
-		carreraIniciada = false; // Reiniciar el estado de la carrera
+		
 		podioMostrado = false; // Reiniciar el estado del podio
 		btnIniciar.setText("Iniciar Carrera"); // Restaurar el texto del botón
 		btnReiniciar.setVisible(false); // Ocultar el botón de reinicio
@@ -330,6 +330,7 @@ public class FrmPrincipal extends JFrame {
 				// Si todos los globos han llegado, mostrar el podio
 				if (ordenLlegada.size() == globos.size() && !podioMostrado) {
 					podioMostrado = true;
+					carreraIniciada = false; // Reiniciar el estado de la carrera
 					mostrarPodio();
 				}
 			}
