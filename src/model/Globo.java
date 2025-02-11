@@ -21,8 +21,7 @@ public class Globo extends Thread {
 	private final FrmPrincipal principal;
 
 	private static final double ANGULO_MAX = Math.toRadians(22.5); // 22.5° en radianes
-	private static final double BALANCEO_MAX = 0.05; // Rango máximo del cambio de balanceo
-	private static final double BALANCEO_MIN = -0.05; // Rango mínimo del cambio de balanceo
+	
 	private static final double ESCALA_SPRITE = 0.25; // Factor de escala para el sprite
 
 	private double velocidad;
@@ -55,6 +54,7 @@ public class Globo extends Thread {
 				sprite = imagenesExplosion[indiceExplosion];
 			} else {
 				((Timer) e.getSource()).stop(); // Detener el Timer al finalizar la animación
+				sprite = null;
 			}
 		});
 
@@ -110,6 +110,16 @@ public class Globo extends Thread {
 	}
 
 	/**
+	 * Inicia la animación de explosión.
+	 */
+	public void explotar() {
+		explotado = true;
+		indiceExplosion = 0;
+		sprite = imagenesExplosion[indiceExplosion];
+		timerExplosion.start();
+	}
+
+	/**
 	 * Dibuja el globo aplicando una transformación para posición, escala y
 	 * rotación.
 	 */
@@ -136,8 +146,6 @@ public class Globo extends Thread {
 				y -= velocidad * 3;
 
 				// Actualizar el balanceo
-				double cambio = Math.random() * (BALANCEO_MAX - BALANCEO_MIN) + BALANCEO_MIN;
-				angulo += cambio;
 				angulo = Math.sin(System.currentTimeMillis() / 1000.0) * ANGULO_MAX;
 			}
 			try {
@@ -190,22 +198,21 @@ public class Globo extends Thread {
 		}).start();
 	}
 
+	/**
+	 * Retorna los límites del globo en función del sprite y la escala.
+	 */
+	public Rectangle getBounds() {
+		int ancho = (int) (sprite.getWidth() * ESCALA_SPRITE);
+		int alto = (int) (sprite.getHeight() * ESCALA_SPRITE);
+		return new Rectangle(x, y, ancho, alto);
+	}
+
 	public void setVelocidad(double velocidad) {
 		this.velocidad = velocidad;
 	}
 
 	public double getVelocidadOriginal() {
 		return velocidadOriginal;
-	}
-
-	/**
-	 * Inicia la animación de explosión.
-	 */
-	public void explotar() {
-		explotado = true;
-		indiceExplosion = 0;
-		sprite = imagenesExplosion[indiceExplosion];
-		timerExplosion.start();
 	}
 
 	public int getY() {
@@ -222,15 +229,6 @@ public class Globo extends Thread {
 
 	public BufferedImage getSprite() {
 		return sprite;
-	}
-
-	/**
-	 * Retorna los límites del globo en función del sprite y la escala.
-	 */
-	public Rectangle getBounds() {
-		int ancho = (int) (sprite.getWidth() * ESCALA_SPRITE);
-		int alto = (int) (sprite.getHeight() * ESCALA_SPRITE);
-		return new Rectangle(x, y, ancho, alto);
 	}
 
 	public double getVelocidad() {
